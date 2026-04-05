@@ -13,7 +13,7 @@
 ## 🚀 快速预览
 
 ### 在线预览链接
-- **[Vercel 部署](https://flutter-app-preview.vercel.app)** (点击访问)
+https://quick-lines-teach.loca.lt
 
 ### 本地运行
 ```bash
