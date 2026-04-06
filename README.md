@@ -12,8 +12,37 @@
 
 ## 🚀 快速预览
 
-### 在线预览链接
-https://long-ideas-marry.loca.lt
+### 📱 部署状态说明
+项目已成功部署到 Vercel，但由于项目在受保护的组织中，**需要先登录 Vercel 账户才能访问**。
+
+### 🔗 最新部署链接
+- **主域名**: [https://flutterapplication1-phi.vercel.app](https://flutterapplication1-phi.vercel.app)
+- **最新部署**: [https://flutterapplication1-6ny5tzwnf-xc93704-2263s-projects.vercel.app](https://flutterapplication1-6ny5tzwnf-xc93704-2263s-projects.vercel.app)
+
+### 🔓 访问解决方案
+**方案1：在已登录 Vercel 的浏览器中访问**
+1. 确保已在浏览器中登录 Vercel (https://vercel.com)
+2. 直接点击上方链接访问
+
+**方案2：将项目设置为公开（推荐）**
+1. 访问 [Vercel 项目面板](https://vercel.com/xc93704-2263s-projects/flutter_application_1)
+2. 在 Settings → General → Visibility 中设置为 "Public"
+3. 保存后即可公开访问
+
+**方案3：本地运行预览**
+```bash
+# 本地运行 Web 服务器
+flutter run -d web-server --web-port 8080
+
+# 在手机浏览器中访问
+# http://[你的电脑IP]:8080
+# 确保手机和电脑在同一网络
+```
+
+### ✅ 已修复的功能
+- **治疗模式选择滚动修复** - 手机端可正常滚动查看全部四个模式
+- **情绪晴雨表** - 实时情绪状态显示和建议
+- **设备连接状态** - DBS设备和HRV手环状态监控
 
 ### 本地运行
 ```bash
@@ -58,7 +87,14 @@ build/web/                 # Web 构建输出
 
 ## 🌐 部署指南
 
-### 1. Vercel 部署 (推荐)
+### 1. Vercel 部署 (推荐，已成功部署)
+本项目已通过 Vercel 部署，提供稳定的在线预览服务。
+
+**已部署链接：**
+- **主域名**: https://flutterapplication1-phi.vercel.app
+- **部署详情**: https://vercel.com/xc93704-2263s-projects/flutter_application_1
+
+**部署命令：**
 ```bash
 # 安装 Vercel CLI
 npm install -g vercel
@@ -68,7 +104,19 @@ vercel login
 
 # 部署到生产环境
 vercel --prod
+
+# 查看部署状态
+vercel list
+
+# 查看部署日志
+vercel logs flutterapplication1-phi.vercel.app
 ```
+
+**自动部署配置：**
+1. 在 Vercel 面板中连接 GitHub 仓库
+2. 配置构建命令: `flutter build web --release`
+3. 输出目录: `build/web`
+4. 环境变量: 无需特殊配置
 
 ### 2. Netlify 部署
 1. 访问 [Netlify](https://netlify.com)
