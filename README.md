@@ -13,13 +13,13 @@
 ## 🚀 快速预览
 
 ### 在线预览链接
-https://quick-lines-teach.loca.lt
+https://long-ideas-marry.loca.lt
 
 ### 本地运行
 ```bash
 # 克隆项目
-git clone https://github.com/xxxxdxc/flutter-app-preview.git
-cd flutter-app-preview
+git clone https://github.com/xxxxdxc/flutter-Naoxinyuyu-app.git
+cd flutter-Naoxinyuyu-app
 
 # 安装依赖
 flutter pub get
@@ -78,7 +78,7 @@ vercel --prod
 ### 3. GitHub Pages 部署
 ```bash
 # 构建 Web 版本
-flutter build web --release --base-href "/flutter-app-preview/"
+flutter build web --release --base-href "/flutter-Naoxinyuyu-app/"
 
 # 推送到 gh-pages 分支
 git subtree push --prefix build/web origin gh-pages
@@ -133,7 +133,7 @@ flutter test
 ## 📞 联系方式
 
 如有问题或建议，请通过以下方式联系：
-- **GitHub Issues**: [项目 Issues](https://github.com/xxxxdxc/flutter-app-preview/issues)
+- **GitHub Issues**: [项目 Issues](https://github.com/xxxxdxc/flutter-Naoxinyuyu-app/issues)
 - **邮箱**: @3093600673@qq.com
 
 ## 🙏 致谢
