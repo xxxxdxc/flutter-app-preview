@@ -176,6 +176,44 @@ class SafetyLimits {
 // 时间范围枚举
 enum TimeRange { last24h, last7d, last30d, custom }
 
+// ========== 情绪状态模型 ==========
+
+// 情绪等级枚举
+enum MoodLevel { veryLow, low, neutral, good, excellent }
+
+// 情绪状态数据类
+class MoodState {
+  final MoodLevel level;
+  final double value; // 0-100
+  final String description;
+  final String suggestion;
+  final DateTime timestamp;
+
+  MoodState({
+    required this.level,
+    required this.value,
+    required this.description,
+    required this.suggestion,
+    required this.timestamp,
+  });
+
+  MoodState copyWith({
+    MoodLevel? level,
+    double? value,
+    String? description,
+    String? suggestion,
+    DateTime? timestamp,
+  }) {
+    return MoodState(
+      level: level ?? this.level,
+      value: value ?? this.value,
+      description: description ?? this.description,
+      suggestion: suggestion ?? this.suggestion,
+      timestamp: timestamp ?? this.timestamp,
+    );
+  }
+}
+
 // 分析指标数据类
 class AnalysisMetrics {
   final double healthScore;           // 健康评分 0-100
@@ -267,6 +305,66 @@ class GlobalAppState extends ChangeNotifier {
 
   // ========== 用户设置 ==========
   UserSettings settings = UserSettings();
+
+  // ========== 情绪状态 ==========
+  MoodState _moodState = _createRandomMoodState();
+
+  // 创建随机情绪状态（30-70范围内）
+  static MoodState _createRandomMoodState() {
+    final random = Random();
+    final value = 30.0 + random.nextDouble() * 40.0; // 30-70范围内随机
+    final level = _calculateMoodLevelStatic(value);
+    return MoodState(
+      level: level,
+      value: value,
+      description: _getMoodDescriptionStatic(level),
+      suggestion: _getMoodSuggestionStatic(level),
+      timestamp: DateTime.now(),
+    );
+  }
+
+  // 静态方法用于计算情绪等级
+  static MoodLevel _calculateMoodLevelStatic(double value) {
+    if (value < 20) return MoodLevel.veryLow;
+    if (value < 40) return MoodLevel.low;
+    if (value < 60) return MoodLevel.neutral;
+    if (value < 80) return MoodLevel.good;
+    return MoodLevel.excellent;
+  }
+
+  // 静态方法用于获取情绪描述
+  static String _getMoodDescriptionStatic(MoodLevel level) {
+    switch (level) {
+      case MoodLevel.veryLow:
+        return '情绪低落，需要关注';
+      case MoodLevel.low:
+        return '情绪偏低，建议调整';
+      case MoodLevel.neutral:
+        return '情绪稳定，状态正常';
+      case MoodLevel.good:
+        return '情绪良好，状态积极';
+      case MoodLevel.excellent:
+        return '情绪极佳，状态优秀';
+    }
+  }
+
+  // 静态方法用于获取情绪建议
+  static String _getMoodSuggestionStatic(MoodLevel level) {
+    switch (level) {
+      case MoodLevel.veryLow:
+        return '建议进行深度放松练习，咨询专业人员';
+      case MoodLevel.low:
+        return '尝试呼吸练习和轻度运动，调整心态';
+      case MoodLevel.neutral:
+        return '保持当前状态，适当休息和放松';
+      case MoodLevel.good:
+        return '继续保持积极状态，适度社交和运动';
+      case MoodLevel.excellent:
+        return '状态优秀，保持良好习惯，帮助他人';
+    }
+  }
+
+  MoodState get moodState => _moodState;
 
   // ========== 数据分析状态 ==========
   TimeRange _selectedTimeRange = TimeRange.last24h;
@@ -364,7 +462,7 @@ class GlobalAppState extends ChangeNotifier {
     _simTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
       // 生成一些模拟波形数据
       final t = timer.tick * 0.05;
-      
+
       final eegValue = sin(t * 10) * 10 + sin(t * 2) * 5 + (_rand.nextDouble() * 5);
       final newEegWave = List<double>.from(eegStream.waveform)..add(eegValue);
       if (newEegWave.length > eegStream.sampleRate * 10) newEegWave.removeAt(0);
@@ -375,6 +473,7 @@ class GlobalAppState extends ChangeNotifier {
 
       eegStream = eegStream.copyWith(waveform: newEegWave);
       ecgStream = ecgStream.copyWith(waveform: newEcgWave);
+
       notifyListeners();
     });
   }
@@ -600,4 +699,65 @@ class GlobalAppState extends ChangeNotifier {
       generatedAt: DateTime.now(),
     );
   }
+
+  // ========== 情绪状态管理方法 ==========
+
+  // 更新情绪状态
+  void updateMoodState(double newValue) {
+    final newLevel = _calculateMoodLevel(newValue);
+    final newDescription = _getMoodDescription(newLevel);
+    final newSuggestion = _getMoodSuggestion(newLevel);
+
+    _moodState = MoodState(
+      level: newLevel,
+      value: newValue,
+      description: newDescription,
+      suggestion: newSuggestion,
+      timestamp: DateTime.now(),
+    );
+
+    notifyListeners();
+  }
+
+  // 根据数值计算情绪等级
+  MoodLevel _calculateMoodLevel(double value) {
+    if (value < 20) return MoodLevel.veryLow;
+    if (value < 40) return MoodLevel.low;
+    if (value < 60) return MoodLevel.neutral;
+    if (value < 80) return MoodLevel.good;
+    return MoodLevel.excellent;
+  }
+
+  // 获取情绪描述
+  String _getMoodDescription(MoodLevel level) {
+    switch (level) {
+      case MoodLevel.veryLow:
+        return '情绪低落，需要关注';
+      case MoodLevel.low:
+        return '情绪偏低，建议调整';
+      case MoodLevel.neutral:
+        return '情绪稳定，状态正常';
+      case MoodLevel.good:
+        return '情绪良好，状态积极';
+      case MoodLevel.excellent:
+        return '情绪极佳，状态优秀';
+    }
+  }
+
+  // 获取情绪建议
+  String _getMoodSuggestion(MoodLevel level) {
+    switch (level) {
+      case MoodLevel.veryLow:
+        return '建议进行深度放松练习，咨询专业人员';
+      case MoodLevel.low:
+        return '尝试呼吸练习和轻度运动，调整心态';
+      case MoodLevel.neutral:
+        return '保持当前状态，适当休息和放松';
+      case MoodLevel.good:
+        return '继续保持积极状态，适度社交和运动';
+      case MoodLevel.excellent:
+        return '状态优秀，保持良好习惯，帮助他人';
+    }
+  }
+
 }

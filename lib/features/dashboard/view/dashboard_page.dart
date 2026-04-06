@@ -27,6 +27,8 @@ class DashboardPage extends StatelessWidget {
             const SizedBox(height: 16),
             const _HeartRateCard(),
             const SizedBox(height: 16),
+            const _MoodBarometerCard(),
+            const SizedBox(height: 16),
             const _MetricsGrid(),
             const SizedBox(height: 80), // 为 FAB 留空间
           ],
@@ -404,11 +406,15 @@ class _ModeCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(
-                              modeDesc.name,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: modeDesc.color,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                modeDesc.name,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: modeDesc.color,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -450,6 +456,7 @@ class _ModeCard extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      isScrollControlled: true,
       builder: (context) => _ModeSelectorBottomSheet(),
     );
   }
@@ -465,11 +472,14 @@ class _ModeSelectorBottomSheet extends StatelessWidget {
         final allModes = state.getAllModeDescriptions();
         final currentMode = state.currentModeDescription;
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: SafeArea(child: ListView(
+            shrinkWrap: true,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16.0),
             children: [
               // 标题
               Row(
@@ -491,6 +501,8 @@ class _ModeSelectorBottomSheet extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textSecondary,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 16),
 
@@ -503,7 +515,7 @@ class _ModeSelectorBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 16),
             ],
-          ),
+          )),
         );
       },
     );
@@ -640,6 +652,8 @@ class _ModeOptionTile extends StatelessWidget {
                         color: modeDesc.color,
                         fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -656,12 +670,19 @@ class _ModeOptionTile extends StatelessWidget {
 
               // 信息图标和选择标记
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // 信息图标
-                  IconButton(
-                    icon: const Icon(Icons.info_outline, size: 20),
-                    color: AppTheme.textSecondary,
-                    onPressed: () => _showModeDetails(context, modeDesc),
+                  GestureDetector(
+                    onTap: () => _showModeDetails(context, modeDesc),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
 
@@ -742,4 +763,338 @@ class _ModeOptionTile extends StatelessWidget {
         return const Text('• 复杂症状治疗\n• 多模态生物反馈\n• 个性化治疗方案');
     }
   }
+}
+
+class _MoodBarometerCard extends StatefulWidget {
+  const _MoodBarometerCard();
+
+  @override
+  State<_MoodBarometerCard> createState() => _MoodBarometerCardState();
+}
+
+class _MoodBarometerCardState extends State<_MoodBarometerCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _sliderController;
+  late Animation<double> _sliderAnimation;
+  double? _previousMoodValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _sliderController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _sliderAnimation = CurvedAnimation(
+      parent: _sliderController,
+      curve: Curves.easeInOut,
+    );
+    // 初始启动动画
+    _sliderController.forward();
+  }
+
+  @override
+  void dispose() {
+    _sliderController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<GlobalAppState>(
+      builder: (context, state, child) {
+        debugPrint('MoodBarometerCard building, moodState: ${state.moodState.level} ${state.moodState.value}');
+        final moodState = state.moodState;
+
+        // 检查情绪值是否变化，如果变化则重新启动动画
+        if (_previousMoodValue != null && _previousMoodValue != moodState.value) {
+          _sliderController.reset();
+          _sliderController.forward();
+        }
+        _previousMoodValue = moodState.value;
+
+        return Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: AppTheme.divider.withAlpha((0.3 * 255).toInt())),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 标题行
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '情绪晴雨表',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    Icon(
+                      _getDynamicMoodIcon(moodState.value),
+                      color: _getMoodColor(moodState.level),
+                      size: 24,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // 主要内容：三列布局
+                _buildContentLayout(context, moodState),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContentLayout(BuildContext context, MoodState moodState) {
+    // 响应式布局：小屏幕垂直，大屏幕水平
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
+    if (isSmallScreen) {
+      return Column(
+        children: [
+          // 情绪状态
+          _buildMoodStatus(context, moodState),
+          const SizedBox(height: 16),
+          // 渐变进度条
+          _buildGradientProgressBar(context, moodState.value),
+          const SizedBox(height: 16),
+          // 行动建议按钮
+          _buildActionButton(context, moodState.suggestion),
+        ],
+      );
+    } else {
+      return Row(
+        children: [
+          // 左侧：情绪状态 (2/7比例)
+          Expanded(
+            flex: 2,
+            child: _buildMoodStatus(context, moodState),
+          ),
+          // 中间：渐变进度条 (3/7比例)
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildGradientProgressBar(context, moodState.value),
+            ),
+          ),
+          // 右侧：行动建议按钮 (2/7比例)
+          Expanded(
+            flex: 2,
+            child: _buildActionButton(context, moodState.suggestion),
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget _buildMoodStatus(BuildContext context, MoodState moodState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${moodState.value.toInt()}',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: _getMoodColor(moodState.level),
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          moodState.description,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGradientProgressBar(BuildContext context, double value) {
+    return Column(
+      children: [
+        // 使用LayoutBuilder获取实际宽度
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final progressBarWidth = constraints.maxWidth;
+
+            return SizedBox(
+              height: 24, // 包含滑块的高度
+              child: Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  // 渐变条背景
+                  Container(
+                    height: 8,
+                    width: progressBarWidth,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      gradient: const LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          AppTheme.primaryLight,
+                          AppTheme.primaryDark,
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // 进度填充
+                  AnimatedBuilder(
+                    animation: _sliderAnimation,
+                    builder: (context, child) {
+                      return Container(
+                        height: 8,
+                        width: progressBarWidth *
+                            (value / 100) *
+                            _sliderAnimation.value,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.white.withAlpha((0.3 * 255).toInt()),
+                        ),
+                      );
+                    },
+                  ),
+
+                  // 滑块
+                  AnimatedBuilder(
+                    animation: _sliderAnimation,
+                    builder: (context, child) {
+                      final sliderPosition = progressBarWidth *
+                          (value / 100) *
+                          _sliderAnimation.value;
+
+                      return Positioned(
+                        left: sliderPosition - 12, // 滑块宽度24，中心对齐
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha((0.1 * 255).toInt()),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: AppTheme.primaryDark,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+
+        // 刻度标签
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('低落', style: Theme.of(context).textTheme.labelSmall),
+            Text('中性', style: Theme.of(context).textTheme.labelSmall),
+            Text('良好', style: Theme.of(context).textTheme.labelSmall),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context, String suggestion) {
+    return ElevatedButton(
+      onPressed: () {
+        _showSuggestionDialog(context, suggestion);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.primaryMain,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      child: const Text('行动建议'),
+    );
+  }
+
+  void _showSuggestionDialog(BuildContext context, String suggestion) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('情绪调节建议'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('根据您当前的情绪状态，建议：'),
+            const SizedBox(height: 16),
+            Text(suggestion),
+            const SizedBox(height: 16),
+            const Text(
+              '提示：',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Text('• 建议每天进行10-15分钟的放松练习'),
+            const Text('• 保持规律的作息时间'),
+            const Text('• 如有需要，及时咨询专业人员'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 获取动态情绪图标（7档表情映射）
+  IconData _getDynamicMoodIcon(double value) {
+    if (value < 10) return Icons.sentiment_very_dissatisfied;     // 0-10: 😢
+    if (value < 25) return Icons.sentiment_dissatisfied;          // 10-25: 😞
+    if (value < 35) return Icons.sentiment_neutral;               // 25-35: 😐
+    if (value < 50) return Icons.sentiment_satisfied_alt;         // 35-50: 🙂
+    if (value < 65) return Icons.sentiment_satisfied;             // 50-65: 😊
+    if (value < 85) return Icons.sentiment_very_satisfied;        // 65-85: 😄
+    return Icons.emoji_emotions;                                 // 85-100: 😁
+  }
+
+  // 获取情绪颜色
+  Color _getMoodColor(MoodLevel level) {
+    switch (level) {
+      case MoodLevel.veryLow:
+        return AppTheme.error; // 红色
+      case MoodLevel.low:
+        return AppTheme.warning; // 橙色
+      case MoodLevel.neutral:
+        return AppTheme.textSecondary; // 灰色
+      case MoodLevel.good:
+        return AppTheme.connected; // 绿色
+      case MoodLevel.excellent:
+        return AppTheme.primaryMain; // 蓝色
+    }
+    // 永远不会执行到这里，但为了编译安全
+    return AppTheme.textSecondary;
+  }
+
 }
