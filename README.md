@@ -13,7 +13,7 @@
 ## 🚀 快速预览
 
 ### 在线预览链接
-- **[Vercel 部署](https://flutter-app-preview.vercel.app)** (点击访问)
+https://quick-lines-teach.loca.lt
 
 ### 本地运行
 ```bash
@@ -134,7 +134,7 @@ flutter test
 
 如有问题或建议，请通过以下方式联系：
 - **GitHub Issues**: [项目 Issues](https://github.com/xxxxdxc/flutter-app-preview/issues)
-- **邮箱**: [您的邮箱]
+- **邮箱**: @3093600673@qq.com
 
 ## 🙏 致谢
 
